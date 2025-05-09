@@ -3,12 +3,17 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, schema
 from .models import Task
 from .serializers import TaskSerializer
-
-
 from rest_framework.viewsets import ModelViewSet
+from drf_spectacular.utils import extend_schema
+
+@extend_schema(
+    summary="Get All Task or Create a new Task",
+    description = "This endpoint allows you to fetch all task or add a new task.",
+    responses = TaskSerializer,
+)
 
 class TaskViewSet(ModelViewSet):
     queryset = Task.objects.all()
