@@ -38,7 +38,16 @@ class TaskViewSet(ModelViewSet):
 
 
 def home(request):
-    return render(request, 'index.html')
+    return render(request, 'homepage.html')
+
+def dashboard(request):
+    return render(request, 'dashboard.html')
+
+def my_task(request):
+    return render(request, 'my_task.html')
+
+def create_task(request):
+    return render(request, 'create_task.html')
 
 def register(request):
     if request.method == "POST":

@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tasks | Todo Application{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">My Tasks</h1>
+    <p class="mt-1 text-gray-600">Manage and organize your tasks</p>
+  </div>
+  <div class="mt-4 md:mt-0">
+    <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+      <i class="fas fa-plus mr-2"></i> Add New Task
+    </a>
+  </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="bg-white rounded-lg shadow mb-6">
+  <div class="p-6">
+    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+      <!-- Search -->
+      <div class="flex-1">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400"></i>
+          </div>
+          <input type="text" id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search tasks...">
+        </div>
+      </div>
+      
+      <!-- Filters -->
+      <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+        <!-- Status Filter -->
+        <div>
+          <select id="status-filter" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+            <option value="all">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        
+        <!-- Priority Filter -->
+        <div>
+          <select id="priority-filter" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+            <option value="all">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        
+        <!-- Sort By -->
+        <div>
+          <select id="sort-by" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+            <option value="due_date">Due Date</option>
+            <option value="priority">Priority</option>
+            <option value="created">Date Created</option>
+            <option value="title">Title</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task List -->
+<div class="bg-white rounded-lg shadow">
+  <div class="border-b border-gray-200">
+    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <div class="col-span-1"></div>
+      <div class="col-span-5 sm:col-span-6">Task</div>
+      <div class="col-span-3 sm:col-span-2">Priority</div>
+      <div class="col-span-3 sm:col-span-2">Due Date</div>
+      <div class="col-span-0 sm:col-span-1"></div>
+    </div>
+  </div>
+  
+  <!-- Loading Indicator -->
+  <div id="tasks-loading" class="text-center py-12">
+    <i class="fas fa-circle-notch fa-spin text-blue-500 text-3xl"></i>
+    <p class="mt-4 text-gray-600">Loading your tasks...</p>
+  </div>
+  
+  <!-- Empty State -->
+  <div id="tasks-empty" class="hidden py-12 text-center">
+    <div class="inline-block p-4 rounded-full bg-blue-100 text-blue-600 mb-4">
+      <i class="fas fa-clipboard-list text-3xl"></i>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900">No tasks found</h3>
+    <p class="mt-2 text-gray-500">Get started by creating a new task</p>
+    <div class="mt-6">
+      <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <i class="fas fa-plus mr-2"></i> Add New Task
+      </a>
+    </div>
+  </div>
+  
+  <!-- Task List -->
+  <div id="tasks-list" class="hidden divide-y divide-gray-200">
+    <!-- Tasks will be loaded here via JavaScript -->
+  </div>
+  
+  <!-- Pagination -->
+  <div id="pagination" class="hidden px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+    <div class="flex-1 flex justify-between sm:hidden">
+      <button id="prev-page-mobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        Previous
+      </button>
+      <button id="next-page-mobile" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+        Next
+      </button>
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+      <div>
+        <p class="text-sm text-gray-700">
+          Showing <span id="page-start">1</span> to <span id="page-end">10</span> of <span id="total-tasks">0</span> tasks
+        </p>
+      </div>
+      <div>
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+          <button id="prev-page" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">Previous</span>
+            <i class="fas fa-chevron-left text-xs"></i>
+          </button>
+          <div id="page-numbers" class="flex">
+            <!-- Page numbers will be generated here -->
+          </div>
+          <button id="next-page" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <span class="sr-only">Next</span>
+            <i class="fas fa-chevron-right text-xs"></i>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Actions Modal -->
+<div id="task-actions-modal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+              Task Details
+            </h3>
+            <div class="mt-4">
+              <h4 id="modal-task-title" class="text-xl font-semibold text-gray-900 mb-2"></h4>
+              <p id="modal-task-description" class="text-gray-600 mb-4"></p>
+              
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p class="text-sm text-gray-500">Priority</p>
+                  <p id="modal-task-priority" class="font-medium"></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Due Date</p>
+                  <p id="modal-task-due-date" class="font-medium"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" id="modal-edit-button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Edit
+        </button>
+        <button type="button" id="modal-delete-button" class="mt-3 w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Delete
+        </button>
+        <button type="button" id="modal-close-button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variables
+    let tasks = [];
+    let filteredTasks = [];
+    let currentPage = 1;
+    const tasksPerPage = 10;
+    
+    // DOM elements
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    const sortBy = document.getElementById('sort-by');
+    const tasksLoading = document.getElementById('tasks-loading');
+    const tasksEmpty = document.getElementById('tasks-empty');
+    const tasksList = document.getElementById('tasks-list');
+    const pagination = document.getElementById('pagination');
+    const pageStart = document.getElementById('page-start');
+    const pageEnd = document.getElementById('page-end');
+    const totalTasksEl = document.getElementById('total-tasks');
+    const pageNumbers = document.getElementById('page-numbers');
+    const prevPage = document.getElementById('prev-page');
+    const nextPage = document.getElementById('next-page');
+    const prevPageMobile = document.getElementById('prev-page-mobile');
+    const nextPageMobile = document.getElementById('next-page-mobile');
+    
+    // Modal elements
+    const taskActionsModal = document.getElementById('task-actions-modal');
+    const modalTaskTitle = document.getElementById('modal-task-title');
+    const modalTaskDescription = document.getElementById('modal-task-description');
+    const modalTaskPriority = document.getElementById('modal-task-priority');
+    const modalTaskDueDate = document.getElementById('modal-task-due-date');
+    const modalEditButton = document.getElementById('modal-edit-button');
+    const modalDeleteButton = document.getElementById('modal-delete-button');
+    const modalCloseButton = document.getElementById('modal-close-button');
+    
+    // Fetch tasks
+    fetchTasks();
+    
+    // Event listeners
+    searchInput.addEventListener('input', filterTasks);
+    statusFilter.addEventListener('change', filterTasks);
+    priorityFilter.addEventListener('change', filterTasks);
+    sortBy.addEventListener('change', filterTasks);
+    
+    prevPage.addEventListener('click', () => goToPage(currentPage - 1));
+    nextPage.addEventListener('click', () => goToPage(currentPage + 1));
+    prevPageMobile.addEventListener('click', () => goToPage(currentPage - 1));
+    nextPageMobile.addEventListener('click', () => goToPage(currentPage + 1));
+    
+    modalCloseButton.addEventListener('click', closeModal);
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === taskActionsModal) {
+        closeModal();
+      }
+    });
+    
+    async function fetchTasks() {
+      try {
+        // In a real application, you would fetch this data from your Django backend
+        // For this example, we'll use mock data
+        
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Mock data
+        tasks = [
+          { id: 1, title: "Complete project proposal", description: "Write and submit the project proposal document", priority: "High", due_date: "2023-06-15", completed: false },
+          { id: 2, title: "Review team presentation", description: "Review and provide feedback on the team's presentation", priority: "Medium", due_date: "2023-06-16", completed: true },
+          { id: 3, title: "Update documentation", description: "Update the project documentation with recent changes", priority: "Low", due_date: "2023-06-18", completed: false },
+          { id: 4, title: "Schedule client meeting", description: "Arrange a meeting with the client to discuss project progress", priority: "High", due_date: "2023-06-14", completed: true },
+          { id: 5, title: "Prepare weekly report", description: "Compile and prepare the weekly progress report", priority: "Medium", due_date: "2023-06-17", completed: false },
+          { id: 6, title: "Fix bug in login module", description: "Debug and fix the issue with user login functionality", priority: "High", due_date: "2023-06-13", completed: false },
+          { id: 7, title: "Design new feature mockups", description: "Create design mockups for the upcoming feature", priority: "Medium", due_date: "2023-06-20", completed: false },
+          { id: 8, title: "Code review for PR #42", description: "Review and provide feedback on pull request #42", priority: "Low", due_date: "2023-06-19", completed: false },
+          { id: 9, title: "Update dependencies", description: "Update project dependencies to the latest versions", priority: "Low", due_date: "2023-06-22", completed: false },
+          { id: 10, title: "Write unit tests", description: "Write unit tests for the new authentication module", priority: "Medium", due_date: "2023-06-21", completed: false },
+          { id: 11, title: "Optimize database queries", description: "Improve performance of slow database queries", priority: "High", due_date: "2023-06-16", completed: false },
+          { id: 12, title: "Deploy to staging", description: "Deploy the latest changes to the staging environment", priority: "High", due_date: "2023-06-15", completed: true },
+          { id: 13, title: "Create user guide", description: "Write a comprehensive user guide for the application", priority: "Medium", due_date: "2023-06-25", completed: false },
+          { id: 14, title: "Implement feedback from QA", description: "Address feedback from the QA team's testing", priority: "High", due_date: "2023-06-17", completed: false },
+          { id: 15, title: "Research new technologies", description: "Research and evaluate new technologies for future projects", priority: "Low", due_date: "2023-06-30", completed: false }
+        ];
+        
+        // Apply initial filtering and sorting
+        filterTasks();
+        
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        tasksLoading.innerHTML = `
+          <div class="text-center py-12">
+            <i class="fas fa-exclamation-circle text-red-500 text-3xl"></i>
+            <p class="mt-4 text-gray-600">Failed to load tasks. Please try again.</p>
+            <button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" onclick="fetchTasks()">Retry</button>
+          </div>
+        `;
+      }
+    }
+    
+    function filterTasks() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const status = statusFilter.value;
+      const priority = priorityFilter.value;
+      const sort = sortBy.value;
+      
+      // Filter tasks
+      filteredTasks = tasks.filter(task => {
+        // Search term filter
+        if (searchTerm && !task.title.toLowerCase().includes(searchTerm)) {
+          return false;
+        }
+        
+        // Status filter
+        if (status === 'completed' && !task.completed) {
+          return false;
+        }
+        if (status === 'pending' && task.completed) {
+          return false;
+        }
+        
+        // Priority filter
+        if (priority !== 'all' && task.priority.toLowerCase() !== priority) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      // Sort tasks
+      filteredTasks.sort((a, b) => {
+        switch (sort) {
+          case 'due_date':
+            return new Date(a.due_date) - new Date(b.due_date);
+          case 'priority':
+            const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
+            return priorityOrder[a.priority] - priorityOrder[b.priority];
+          case 'created':
+            return a.id - b.id; // Using ID as a proxy for creation date
+          case 'title':
+            return a.title.localeCompare(b.title);
+          default:
+            return 0;
+        }
+      });
+      
+      // Reset to first page and render
+      currentPage = 1;
+      renderTasks();
+    }
+    
+    function renderTasks() {
+      // Hide loading indicator
+      tasksLoading.classList.add('hidden');
+      
+      // Check if there are any tasks
+      if (filteredTasks.length === 0) {
+        tasksEmpty.classList.remove('hidden');
+        tasksList.classList.add('hidden');
+        pagination.classList.add('hidden');
+        return;
+      }
+      
+      // Show task list and pagination
+      tasksEmpty.classList.add('hidden');
+      tasksList.classList.remove('hidden');
+      pagination.classList.remove('hidden');
+      
+      // Calculate pagination
+      const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+      const startIndex = (currentPage - 1) * tasksPerPage;
+      const endIndex = Math.min(startIndex + tasksPerPage, filteredTasks.length);
+      const currentTasks = filteredTasks.slice(startIndex, endIndex);
+      
+      // Update pagination text
+      pageStart.textContent = startIndex + 1;
+      pageEnd.textContent = endIndex;
+      totalTasksEl.textContent = filteredTasks.length;
+      
+      // Generate page numbers
+      renderPageNumbers(totalPages);
+      
+      // Disable/enable prev/next buttons
+      prevPage.disabled = currentPage === 1;
+      nextPage.disabled = currentPage === totalPages;
+      prevPageMobile.disabled = currentPage === 1;
+      nextPageMobile.disabled = currentPage === totalPages;
+      
+      if (currentPage === 1) {
+        prevPage.classList.add('opacity-50', 'cursor-not-allowed');
+        prevPageMobile.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        prevPage.classList.remove('opacity-50', 'cursor-not-allowed');
+        prevPageMobile.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      if (currentPage === totalPages) {
+        nextPage.classList.add('opacity-50', 'cursor-not-allowed');
+        nextPageMobile.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        nextPage.classList.remove('opacity-50', 'cursor-not-allowed');
+        nextPageMobile.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      // Render tasks
+      tasksList.innerHTML = '';
+      
+      currentTasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.className = 'grid grid-cols-12 gap-4 px-6 py-4 items-center';
+        
+        // Determine priority color
+        let priorityColor = '';
+        switch(task.priority.toLowerCase()) {
+          case 'high':
+            priorityColor = 'bg-red-100 text-red-800';
+            break;
+          case 'medium':
+            priorityColor = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'low':
+            priorityColor = 'bg-green-100 text-green-800';
+            break;
+          default:
+            priorityColor = 'bg-gray-100 text-gray-800';
+        }
+        
+        taskElement.innerHTML = `
+          <div class="col-span-1">
+            <input type="checkbox" class="task-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-id="${task.id}" ${task.completed ? 'checked' : ''}>
+          </div>
+          <div class="col-span-5 sm:col-span-6">
+            <p class="text-sm font-medium text-gray-900 ${task.completed ? 'line-through' : ''}">${task.title}</p>
+          </div>
+          <div class="col-span-3 sm:col-span-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColor}">
+              ${task.priority}
+            </span>
+          </div>
+          <div class="col-span-3 sm:col-span-2">
+            <p class="text-sm text-gray-500">${formatDate(task.due_date)}</p>
+          </div>
+          <div class="hidden sm:block sm:col-span-1 text-right">
+            <button class="task-actions-button text-gray-400 hover:text-gray-600" data-id="${task.id}">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+          </div>
+        `;
+        
+        tasksList.appendChild(taskElement);
+      });
+      
+      // Add event listeners to checkboxes
+      document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const taskId = parseInt(this.dataset.id);
+          toggleTaskCompletion(taskId);
+        });
+      });
+      
+      // Add event listeners to action buttons
+      document.querySelectorAll('.task-actions-button').forEach(button => {
+        button.addEventListener('click', function() {
+          const taskId = parseInt(this.dataset.id);
+          showTaskDetails(taskId);
+        });
+      });
+      
+      // Make entire row clickable
+      document.querySelectorAll('.grid.grid-cols-12').forEach(row => {
+        row.addEventListener('click', function(event) {
+          // Don't trigger if clicking on checkbox or action button
+          if (event.target.closest('.task-checkbox') || event.target.closest('.task-actions-button')) {
+            return;
+          }
+          
+          const checkbox = this.querySelector('.task-checkbox');
+          if (checkbox) {
+            const taskId = parseInt(checkbox.dataset.id);
+            showTaskDetails(taskId);
+          }
+        });
+      });
+    }
+    
+    function renderPageNumbers(totalPages) {
+      pageNumbers.innerHTML = '';
+      
+      // Determine range of page numbers to show
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + 4);
+      
+      if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+      }
+      
+      // Add first page if not included
+      if (startPage > 1) {
+        addPageButton(1);
+        if (startPage > 2) {
+          addEllipsis();
+        }
+      }
+      
+      // Add page numbers
+      for (let i = startPage; i <= endPage; i++) {
+        addPageButton(i);
+      }
+      
+      // Add last page if not included
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          addEllipsis();
+        }
+        addPageButton(totalPages);
+      }
+    }
+    
+    function addPageButton(pageNum) {
+      const button = document.createElement('button');
+      button.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+        pageNum === currentPage
+          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+      }`;
+      button.textContent = pageNum;
+      button.addEventListener('click', () => goToPage(pageNum));
+      pageNumbers.appendChild(button);
+    }
+    
+    function addEllipsis() {
+      const span = document.createElement('span');
+      span.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+      span.textContent = '...';
+      pageNumbers.appendChild(span);
+    }
+    
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+      if (page < 1 || page > totalPages) {
+        return;
+      }
+      
+      currentPage = page;
+      renderTasks();
+    }
+    
+    function toggleTaskCompletion(taskId) {
+      // Find the task
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        // Toggle completion status
+        task.completed = !task.completed;
+        
+        // In a real application, you would send an API request to update the task
+        // For this example, we'll just update the UI
+        
+        // Re-apply filters and render
+        filterTasks();
+      }
+    }
+    
+    function showTaskDetails(taskId) {
+      // Find the task
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        // Populate modal
+        modalTaskTitle.textContent = task.title;
+        modalTaskDescription.textContent = task.description || 'No description provided.';
+        
+        // Set priority with color
+        let priorityColor = '';
+        switch(task.priority.toLowerCase()) {
+          case 'high':
+            priorityColor = 'text-red-600';
+            break;
+          case 'medium':
+            priorityColor = 'text-yellow-600';
+            break;
+          case 'low':
+            priorityColor = 'text-green-600';
+            break;
+        }
+        modalTaskPriority.className = `font-medium ${priorityColor}`;
+        modalTaskPriority.textContent = task.priority;
+        
+        // Set due date
+        modalTaskDueDate.textContent = formatDate(task.due_date);
+        
+        // Set up edit button
+        modalEditButton.onclick = function() {
+          // In a real application, you would redirect to the edit page
+          window.location.href = `/tasks/${taskId}/edit/`;
+        };
+        
+        // Set up delete button
+        modalDeleteButton.onclick = function() {
+          if (confirm('Are you sure you want to delete this task?')) {
+            // In a real application, you would send an API request to delete the task
+            // For this example, we'll just remove it from our local array
+            const index = tasks.findIndex(t => t.id === taskId);
+            if (index !== -1) {
+              tasks.splice(index, 1);
+              closeModal();
+              filterTasks();
+            }
+          }
+        };
+        
+        // Show modal
+        taskActionsModal.classList.remove('hidden');
+      }
+    }
+    
+    function closeModal() {
+      taskActionsModal.classList.add('hidden');
+    }
+    
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+  });
+</script>
+{% endblock %}

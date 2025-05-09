@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Task | Todo Application{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-3xl font-bold text-gray-900">Create New Task</h1>
+  <p class="mt-1 text-gray-600">Add a new task to your todo list</p>
+</div>
+
+<div class="bg-white rounded-lg shadow">
+  <form id="create-task-form" class="p-6">
+    <!-- Title -->
+    <div class="mb-6">
+      <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title <span class="text-red-500">*</span></label>
+      <input type="text" id="title" name="title" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+      <p id="title-error" class="mt-1 text-sm text-red-600 hidden"></p>
+    </div>
+    
+    <!-- Description -->
+    <div class="mb-6">
+      <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+      <textarea id="description" name="description" rows="4" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+    </div>
+    
+    <!-- Due Date and Priority -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Due Date -->
+      <div>
+        <label for="due-date" class="block text-sm font-medium text-gray-700 mb-1">Due Date <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <input type="text" id="due-date" name="due_date" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Select date">
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <i class="fas fa-calendar-alt text-gray-400"></i>
+          </div>
+        </div>
+        <p id="due-date-error" class="mt-1 text-sm text-red-600 hidden"></p>
+      </div>
+      
+      <!-- Priority -->
+      <div>
+        <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority <span class="text-red-500">*</span></label>
+        <select id="priority" name="priority" required class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="">Select priority</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <p id="priority-error" class="mt-1 text-sm text-red-600 hidden"></p>
+      </div>
+    </div>
+    
+    <!-- Category and Tags -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Category -->
+      <div>
+        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <select id="category" name="category" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="">Select category</option>
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Study">Study</option>
+          <option value="Health">Health</option>
+          <option value="Finance">Finance</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      
+      <!-- Tags -->
+      <div>
+        <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+        <input type="text" id="tags" name="tags" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Enter tags separated by commas">
+        <p class="mt-1 text-xs text-gray-500">Separate tags with commas (e.g., important, meeting, follow-up)</p>
+      </div>
+    </div>
+    
+    <!-- Reminder -->
+    <div class="mb-6">
+      <div class="flex items-center">
+        <input type="checkbox" id="set-reminder" name="set_reminder" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+        <label for="set-reminder" class="ml-2 block text-sm font-medium text-gray-700">Set a reminder</label>
+      </div>
+      
+      <div id="reminder-options" class="mt-3 pl-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="reminder-date" class="block text-sm font-medium text-gray-700 mb-1">Reminder Date</label>
+            <div class="relative">
+              <input type="text" id="reminder-date" name="reminder_date" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Select date">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <i class="fas fa-calendar-alt text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label for="reminder-time" class="block text-sm font-medium text-gray-700 mb-1">Reminder Time</label>
+            <div class="relative">
+              <input type="text" id="reminder-time" name="reminder_time" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Select time">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <i class="fas fa-clock text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Notes -->
+    <div class="mb-6">
+      <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+      <textarea id="notes" name="notes" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+    </div>
+    
+    <!-- Submit Buttons -->
+    <div class="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+      <a href="#" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Cancel
+      </a>
+      <button type="submit" id="submit-button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Create Task
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="fixed inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+            <i class="fas fa-check text-green-600"></i>
+          </div>
+          <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+              Task Created Successfully
+            </h3>
+            <div class="mt-2">
+              <p class="text-sm text-gray-500">
+                Your task has been created successfully.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <a href="% url 'my_task' %" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+          View Tasks
+        </a>
+        <button type="button" id="create-another-button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Create Another
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date pickers
+    flatpickr("#due-date", {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      altInput: true,
+      altFormat: "F j, Y",
+    });
+    
+    flatpickr("#reminder-date", {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      altInput: true,
+      altFormat: "F j, Y",
+    });
+    
+    flatpickr("#reminder-time", {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+      time_24hr: false,
+    });
+    
+    // Toggle reminder options
+    const setReminderCheckbox = document.getElementById('set-reminder');
+    const reminderOptions = document.getElementById('reminder-options');
+    
+    setReminderCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        reminderOptions.classList.remove('hidden');
+      } else {
+        reminderOptions.classList.add('hidden');
+      }
+    });
+    
+    // Form validation and submission
+    const form = document.getElementById('create-task-form');
+    const titleInput = document.getElementById('title');
+    const dueDateInput = document.getElementById('due-date');
+    const priorityInput = document.getElementById('priority');
+    const titleError = document.getElementById('title-error');
+    const dueDateError = document.getElementById('due-date-error');
+    const priorityError = document.getElementById('priority-error');
+    const successModal = document.getElementById('success-modal');
+    const createAnotherButton = document.getElementById('create-another-button');
+    
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      // Reset error messages
+      titleError.classList.add('hidden');
+      dueDateError.classList.add('hidden');
+      priorityError.classList.add('hidden');
+      
+      // Validate form
+      let isValid = true;
+      
+      if (!titleInput.value.trim()) {
+        titleError.textContent = 'Title is required';
+        titleError.classList.remove('hidden');
+        isValid = false;
+      }
+      
+      if (!dueDateInput.value) {
+        dueDateError.textContent = 'Due date is required';
+        dueDateError.classList.remove('hidden');
+        isValid = false;
+      }
+      
+      if (!priorityInput.value) {
+        priorityError.textContent = 'Priority is required';
+        priorityError.classList.remove('hidden');
+        isValid = false;
+      }
+      
+      if (isValid) {
+        // In a real application, you would submit the form to your Django backend
+        // For this example, we'll just show the success modal
+        
+        // Simulate form submission delay
+        const submitButton = document.getElementById('submit-button');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Creating...';
+        
+        setTimeout(function() {
+          // Show success modal
+          successModal.classList.remove('hidden');
+          
+          // Reset form
+          form.reset();
+          
+          // Reset button
+          submitButton.disabled = false;
+          submitButton.innerHTML = 'Create Task';
+        }, 1500);
+      }
+    });
+    
+    // Close modal and reset form when "Create Another" is clicked
+    createAnotherButton.addEventListener('click', function() {
+      successModal.classList.add('hidden');
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target === successModal) {
+        successModal.classList.add('hidden');
+      }
+    });
+  });
+</script>
+{% endblock %}

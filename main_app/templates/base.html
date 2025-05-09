@@ -3,39 +3,185 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Django Bootstrap Project</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <title>{% block title %}Todo Application{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {% block extra_css %}{% endblock %}
   </head>
-  <body>
+  <body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center">
+              <i class="fas fa-check-circle text-2xl mr-2"></i>
+              <span class="font-bold text-xl">Todo App</span>
+            </a>
+            <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+              <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 hover:bg-opacity-75 transition duration-150">Dashboard</a>
+              {% if user.is_authenticated %}
+              <a href="{% url 'my_task' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 hover:bg-opacity-75 transition duration-150">My Tasks</a>
+              <a href="{% url 'create_task' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-500 hover:bg-opacity-75 transition duration-150">Add Task</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="hidden md:ml-6 md:flex md:items-center">
+            {% if user.is_authenticated %}
+            <div class="relative ml-3" x-data="{ open: false }">
+              <div>
+                <button @click="open = !open" class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-600 focus:ring-white" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                  <span class="sr-only">Open user menu</span>
+                  <span class="mr-2">{{ user.username }}</span>
+                  <i class="fas fa-user-circle text-xl"></i>
+                </button>
+              </div>
+              <div x-show="open" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1" style="display: none;">
+                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Profile</a>
+                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Logout</a>
+              </div>
+            </div>
+            {% else %}
+            <div class="flex items-center space-x-2">
+              <a href="{% url 'login' %}" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">Login</a>
+              <a href="{% url 'register' %}" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">Register</a>
+            </div>
+            {% endif %}
+          </div>
+          <div class="-mr-2 flex items-center md:hidden">
+            <!-- Mobile menu button -->
+            <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-blue-500 hover:bg-opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-600 focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+              <span class="sr-only">Open main menu</span>
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#">My Django App</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Login</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'register' %}">Register</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-            </li>
-          </ul>
+      <!-- Mobile menu, show/hide based on menu state. -->
+      <div class="md:hidden hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Home</a>
+          {% if user.is_authenticated %}
+          <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">My Tasks</a>
+          <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Add Task</a>
+          {% endif %}
+        </div>
+        <div class="pt-4 pb-3 border-t border-blue-400">
+          {% if user.is_authenticated %}
+          <div class="flex items-center px-5">
+            <div class="flex-shrink-0">
+              <i class="fas fa-user-circle text-2xl text-white"></i>
+            </div>
+            <div class="ml-3">
+              <div class="text-base font-medium text-white">{{ user.username }}</div>
+              <div class="text-sm font-medium text-blue-200">{{ user.email }}</div>
+            </div>
+          </div>
+          <div class="mt-3 px-2 space-y-1">
+            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Profile</a>
+            <a href="{% url 'logout' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Logout</a>
+          </div>
+          {% else %}
+          <div class="mt-3 px-2 space-y-1">
+            <a href="{% url 'login' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Login</a>
+            <a href="{% url 'register' %}" class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-500 hover:bg-opacity-75">Register</a>
+          </div>
+          {% endif %}
         </div>
       </div>
     </nav>
 
-    <div class="container mt-5">
-      {% block content %}
-      {% endblock %}
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      {% for message in messages %}
+      <div class="rounded-md p-4 mb-4 {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-800 border border-yellow-200{% elif message.tags == 'info' %}bg-blue-50 text-blue-800 border border-blue-200{% else %}bg-gray-50 text-gray-800 border border-gray-200{% endif %} flex items-center justify-between" role="alert">
+        <div class="flex items-center">
+          {% if message.tags == 'success' %}
+          <i class="fas fa-check-circle mr-3 text-green-500"></i>
+          {% elif message.tags == 'error' %}
+          <i class="fas fa-exclamation-circle mr-3 text-red-500"></i>
+          {% elif message.tags == 'warning' %}
+          <i class="fas fa-exclamation-triangle mr-3 text-yellow-500"></i>
+          {% elif message.tags == 'info' %}
+          <i class="fas fa-info-circle mr-3 text-blue-500"></i>
+          {% else %}
+          <i class="fas fa-bell mr-3 text-gray-500"></i>
+          {% endif %}
+          <p>{{ message }}</p>
+        </div>
+        <button type="button" class="close-alert ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex h-8 w-8 {% if message.tags == 'success' %}bg-green-100 text-green-500 hover:bg-green-200 focus:ring-green-400{% elif message.tags == 'error' %}bg-red-100 text-red-500 hover:bg-red-200 focus:ring-red-400{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-500 hover:bg-yellow-200 focus:ring-yellow-400{% elif message.tags == 'info' %}bg-blue-100 text-blue-500 hover:bg-blue-200 focus:ring-blue-400{% else %}bg-gray-100 text-gray-500 hover:bg-gray-200 focus:ring-gray-400{% endif %} focus:outline-none focus:ring-offset-2">
+          <span class="sr-only">Close</span>
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %}
     </div>
+    {% endif %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <!-- Content -->
+    <main class="flex-grow">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center mb-4 md:mb-0">
+            <i class="fas fa-check-circle text-blue-600 text-xl mr-2"></i>
+            <span class="text-gray-700 font-semibold">Todo Application</span>
+          </div>
+          <div class="text-gray-500 text-sm">
+            &copy; {% now "Y" %} Todo Application. All rights reserved.
+          </div>
+          <div class="flex space-x-4 mt-4 md:mt-0">
+            <a href="#" class="text-gray-500 hover:text-blue-600 transition duration-150">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-blue-600 transition duration-150">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-blue-600 transition duration-150">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-blue-600 transition duration-150">
+              <i class="fab fa-github"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Alpine.js for dropdown functionality -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+      // Mobile menu toggle
+      document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuButton && mobileMenu) {
+          mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+          });
+        }
+        
+        // Close alert messages
+        const closeButtons = document.querySelectorAll('.close-alert');
+        closeButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            this.parentElement.remove();
+          });
+        });
+      });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
   </body>
 </html>
